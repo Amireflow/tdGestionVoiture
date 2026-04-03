@@ -1,25 +1,27 @@
-package sn.Khadim.l2gl.app.model;
+package sn.khadim.l2gl.app.model;
 
-public class Chauffeur{
-    private int id;
+import java.util.Calendar;
+import java.util.Objects;
+
+public class Chauffeur {
+    private final int id;
     private String prenom;
     private String nom;
+    private Calendar dateNaissance;
+    private Permis permis;
     private Etat etat;
 
-    public Chauffeur(int id, String prenom, String nom, Etat etat, Permis permis) {
+    public Chauffeur(int id, String prenom, String nom, Calendar dateNaissance, Permis permis, Etat etat) {
         this.id = id;
-        this.prenom = prenom;
-        this.nom = nom;
-        this.etat = etat;
-        this.permis = permis;
+        this.prenom = Objects.requireNonNull(prenom, "prenom");
+        this.nom = Objects.requireNonNull(nom, "nom");
+        setDateNaissance(dateNaissance);
+        this.permis = Objects.requireNonNull(permis, "permis");
+        this.etat = Objects.requireNonNull(etat, "etat");
     }
 
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getPrenom() {
@@ -27,7 +29,7 @@ public class Chauffeur{
     }
 
     public void setPrenom(String prenom) {
-        this.prenom = prenom;
+        this.prenom = Objects.requireNonNull(prenom, "prenom");
     }
 
     public String getNom() {
@@ -35,15 +37,15 @@ public class Chauffeur{
     }
 
     public void setNom(String nom) {
-        this.nom = nom;
+        this.nom = Objects.requireNonNull(nom, "nom");
     }
 
-    public Etat getEtat() {
-        return etat;
+    public Calendar getDateNaissance() {
+        return (Calendar) dateNaissance.clone();
     }
 
-    public void setEtat(Etat etat) {
-        this.etat = etat;
+    public void setDateNaissance(Calendar dateNaissance) {
+        this.dateNaissance = (Calendar) Objects.requireNonNull(dateNaissance, "dateNaissance").clone();
     }
 
     public Permis getPermis() {
@@ -51,8 +53,45 @@ public class Chauffeur{
     }
 
     public void setPermis(Permis permis) {
-        this.permis = permis;
+        this.permis = Objects.requireNonNull(permis, "permis");
     }
 
-    private Permis permis;
+    public Etat getEtat() {
+        return etat;
+    }
+
+    public void setEtat(Etat etat) {
+        this.etat = Objects.requireNonNull(etat, "etat");
+    }
+
+    public int getAge() {
+        return DateUtils.getAge(dateNaissance);
+    }
+
+    public boolean estDisponible() {
+        return etat == Etat.DISPO;
+    }
+
+    public boolean doitPartirALaRetraite(int ageRetraite) {
+        return getAge() >= ageRetraite;
+    }
+
+    public String getNomComplet() {
+        return prenom + " " + nom;
+    }
+
+    @Override
+    public String toString() {
+        return "Chauffeur{id="
+                + id
+                + ", nom='"
+                + getNomComplet()
+                + "', age="
+                + getAge()
+                + ", permis="
+                + permis
+                + ", etat="
+                + etat
+                + "}";
+    }
 }

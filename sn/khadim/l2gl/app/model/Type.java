@@ -1,5 +1,6 @@
-package sn.Khadim.l2gl.app.model;
+package sn.khadim.l2gl.app.model;
 
 public enum Type {
-    LOURD,LEGER;
+    LEGER,
+    LOURD
 }

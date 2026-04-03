@@ -1,22 +1,25 @@
-package sn.Khadim.l2gl.app.model;
+package sn.khadim.l2gl.app.model;
 
-import javax.xml.crypto.Data;
-import java.util.Date;
+import java.util.Calendar;
+import java.util.Objects;
 
 public class Vehicule {
-    private String immatriculation;
+    private final String immatriculation;
     private String marque;
     private Type type;
     private Etat etat;
-    private Date dateF;
+    private Calendar dateFabrication;
 
+    public Vehicule(String immatriculation, String marque, Type type, Etat etat, Calendar dateFabrication) {
+        this.immatriculation = Objects.requireNonNull(immatriculation, "immatriculation");
+        this.marque = Objects.requireNonNull(marque, "marque");
+        this.type = Objects.requireNonNull(type, "type");
+        this.etat = Objects.requireNonNull(etat, "etat");
+        setDateFabrication(dateFabrication);
+    }
 
     public String getImmatriculation() {
         return immatriculation;
-    }
-
-    public void setImmatriculation(String immatriculation) {
-        this.immatriculation = immatriculation;
     }
 
     public String getMarque() {
@@ -24,7 +27,7 @@ public class Vehicule {
     }
 
     public void setMarque(String marque) {
-        this.marque = marque;
+        this.marque = Objects.requireNonNull(marque, "marque");
     }
 
     public Type getType() {
@@ -32,7 +35,7 @@ public class Vehicule {
     }
 
     public void setType(Type type) {
-        this.type = type;
+        this.type = Objects.requireNonNull(type, "type");
     }
 
     public Etat getEtat() {
@@ -40,22 +43,39 @@ public class Vehicule {
     }
 
     public void setEtat(Etat etat) {
-        this.etat = etat;
+        this.etat = Objects.requireNonNull(etat, "etat");
     }
 
-    public Date getDateF() {
-        return dateF;
+    public Calendar getDateFabrication() {
+        return (Calendar) dateFabrication.clone();
     }
 
-    public void setDateF(Date dateF) {
-        this.dateF = dateF;
+    public void setDateFabrication(Calendar dateFabrication) {
+        this.dateFabrication = (Calendar) Objects.requireNonNull(dateFabrication, "dateFabrication").clone();
     }
 
-    public Vehicule(String immatriculation, String marque, Type type, Etat etat, Date dateF) {
-        this.immatriculation = immatriculation;
-        this.marque = marque;
-        this.type = type;
-        this.etat = etat;
-        this.dateF = dateF;
+    public int getAge() {
+        return DateUtils.getAge(dateFabrication);
+    }
+
+    public boolean estDisponible() {
+        return etat == Etat.DISPO;
+    }
+
+    public boolean estAmorti() {
+        return getAge() >= 5;
+    }
+
+    @Override
+    public String toString() {
+        return immatriculation
+                + " - "
+                + marque
+                + " - "
+                + type
+                + " - "
+                + etat
+                + " - fabrication: "
+                + DateUtils.format(dateFabrication);
     }
 }

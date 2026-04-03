@@ -1,113 +1,158 @@
-package sn.Khadim.l2gl.app.app;
+package sn.khadim.l2gl.app.app;
 
-import sn.Khadim.l2gl.app.model.*;
-import sn.Khadim.l2gl.app.service.ParcAutoService;
-import java.time.LocalDate;
+import sn.khadim.l2gl.app.model.Chauffeur;
+import sn.khadim.l2gl.app.model.DateUtils;
+import sn.khadim.l2gl.app.model.Etat;
+import sn.khadim.l2gl.app.model.Permis;
+import sn.khadim.l2gl.app.model.TraitementChauffeur;
+import sn.khadim.l2gl.app.model.TraitementChauffeurVehicule;
+import sn.khadim.l2gl.app.model.TraitementVehicule;
+import sn.khadim.l2gl.app.model.Type;
+import sn.khadim.l2gl.app.model.Vehicule;
+
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class Main {
+    private static final int AGE_RETRAITE = 60;
+
     public static void main(String[] args) {
+        // Creation des vehicules
+        Vehicule camion = new Vehicule(
+                "DK-4567-AA",
+                "Mercedes",
+                Type.LOURD,
+                Etat.DISPO,
+                DateUtils.createCalendar(2016, 3, 15)
+        );
+        Vehicule taxi = new Vehicule(
+                "DK-8910-BB",
+                "Toyota",
+                Type.LEGER,
+                Etat.DISPO,
+                DateUtils.createCalendar(2022, 7, 10)
+        );
+        Vehicule fourgon = new Vehicule(
+                "DK-1112-CC",
+                "Iveco",
+                Type.LOURD,
+                Etat.INDISPO,
+                DateUtils.createCalendar(2014, 11, 5)
+        );
 
-        // Donnees de test
-        Vehicule v1 = new Vehicule("AA-123-BB", "Renault", "Clio", 2018, 45000, true, false);
-        Vehicule v2 = new Vehicule("CC-456-DD", "Peugeot", "308", 2015, 120000, false, true);
-        Vehicule v3 = new Vehicule("EE-789-FF", "Toyota", "Yaris", 2022, 15000, true, false);
-        Vehicule v4 = new Vehicule("GG-101-HH", "BMW", "Serie3", 2010, 200000, true, false);
+        // Creation des chauffeurs
+        Chauffeur ali = new Chauffeur(
+                1,
+                "Ali",
+                "Ndiaye",
+                DateUtils.createCalendar(1988, 6, 21),
+                Permis.B,
+                Etat.DISPO
+        );
+        Chauffeur fatou = new Chauffeur(
+                2,
+                "Fatou",
+                "Diop",
+                DateUtils.createCalendar(1962, 2, 4),
+                Permis.A,
+                Etat.DISPO
+        );
+        Chauffeur ibra = new Chauffeur(
+                3,
+                "Ibrahima",
+                "Fall",
+                DateUtils.createCalendar(1995, 9, 13),
+                Permis.B,
+                Etat.INDISPO
+        );
 
-        Conducteur c1 = new Conducteur("Moussa", "B12345");
-        Conducteur c2 = new Conducteur("Fatou", "A98765");
+        List<Vehicule> vehicules = new ArrayList<>(List.of(camion, taxi, fourgon));
+        List<Chauffeur> chauffeurs = List.of(ali, fatou, ibra);
 
-        Entretien e1 = new Entretien("Vidange", 15000, v1);
-        Entretien e2 = new Entretien("Freins", 35000, v2);
+        // 1. Verifier si un chauffeur peut conduire un vehicule
+        TraitementChauffeurVehicule<Boolean> peutConduire = (chauffeur, vehicule) -> {
+            return chauffeur.getPermis().peutConduire(vehicule.getType());
+        };
 
-        Location loc1 = new Location(v1, c1, LocalDate.of(2026, 1, 10), null);
+        // 2. Verifier si un chauffeur et un vehicule sont disponibles
+        TraitementChauffeurVehicule<Boolean> estDisponible = (chauffeur, vehicule) -> {
+            return chauffeur.estDisponible() && vehicule.estDisponible();
+        };
 
-        List<Vehicule> flotte = new ArrayList<>(Arrays.asList(v1, v2, v3, v4));
-        ParcAutoService service = new ParcAutoService();
+        // 3. Verifier si un vehicule est amorti
+        TraitementVehicule<Boolean> estAmorti = vehicule -> {
+            return vehicule.estAmorti();
+        };
 
-        // --- A. Tests ---
-        // 1. Vehicule disponible ?
-        TestVehicule<Vehicule> estDisponible = v -> v.isDisponible() && !v.isEnPanne();
-        System.out.println("=== 1. Vehicules disponibles ===");
-        service.filtrerVehicules(flotte, estDisponible).forEach(v -> System.out.println(v.getImmatriculation()));
+        // 4. Verifier si un chauffeur doit partir a la retraite
+        TraitementChauffeur<Boolean> partALaRetraite = chauffeur -> {
+            return chauffeur.doitPartirALaRetraite(AGE_RETRAITE);
+        };
 
-        // 2. Vehicule en panne ?
-        TestVehicule<Vehicule> estEnPanne = v -> v.isEnPanne();
-        System.out.println("\n=== 2. Vehicules en panne ===");
-        service.filtrerVehicules(flotte, estEnPanne).forEach(v -> System.out.println(v.getImmatriculation()));
+        // 5. Transformer un chauffeur en String
+        TraitementChauffeur<String> transformerEnTexte = chauffeur -> {
+            return chauffeur.toString();
+        };
 
-        // 3. Kilometrage > 100000 ?
-        TestVehicule<Vehicule> kmSupSeuil = v -> v.getKilometrage() > 100000;
-        System.out.println("\n=== 3. Km > 100000 ===");
-        service.filtrerVehicules(flotte, kmSupSeuil).forEach(v -> System.out.println(v.getImmatriculation() + " : " + v.getKilometrage() + " km"));
+        // 6. Comparer deux chauffeurs selon l'age
+        Comparator<Chauffeur> comparerParAge = (chauffeur1, chauffeur2) -> {
+            return Integer.compare(chauffeur1.getAge(), chauffeur2.getAge());
+        };
 
-        // 4. Vehicule a reviser ?
-        TestVehicule<Vehicule> aReviser = v -> v.getKilometrage() > 100000 || v.getAnnee() < 2015;
-        System.out.println("\n=== 4. A reviser ===");
-        service.filtrerVehicules(flotte, aReviser).forEach(v -> System.out.println(v.getImmatriculation()));
+        // 7. Comparer deux vehicules selon le type
+        Comparator<Vehicule> comparerParType = (vehicule1, vehicule2) -> {
+            return vehicule1.getType().compareTo(vehicule2.getType());
+        };
 
-        // 5. Conducteur autorise ?
-        TestVehicule<Conducteur> conducteurAutorise = c -> c.getPermis().startsWith("B");
-        System.out.println("\n=== 5. Conducteurs autorises ===");
-        System.out.println(c1.getNom() + " autorise ? " + conducteurAutorise.tester(c1));
-        System.out.println(c2.getNom() + " autorise ? " + conducteurAutorise.tester(c2));
+        System.out.println("1. Verifier si un chauffeur peut conduire un vehicule");
+        System.out.println(ali.getNomComplet() + " peut conduire le camion ? " + peutConduire.executer(ali, camion));
+        System.out.println(fatou.getNomComplet() + " peut conduire le camion ? " + peutConduire.executer(fatou, camion));
+        System.out.println(fatou.getNomComplet() + " peut conduire le taxi ? " + peutConduire.executer(fatou, taxi));
 
-        // --- B. Transformations ---
-        // 6. Resume vehicule
-        TransformationVehicule<Vehicule, String> resume = v -> v.getMarque() + " " + v.getModele() + " (" + v.getAnnee() + ") - " + v.getKilometrage() + " km";
-        System.out.println("\n=== 6. Resumes ===");
-        service.mapperVehicules(flotte, resume).forEach(System.out::println);
+        System.out.println("\n2. Verifier si un chauffeur et son vehicule sont disponibles");
+        System.out.println(ali.getNomComplet() + " + " + camion.getImmatriculation() + " : "
+                + estDisponible.executer(ali, camion));
+        System.out.println(ibra.getNomComplet() + " + " + taxi.getImmatriculation() + " : "
+                + estDisponible.executer(ibra, taxi));
+        System.out.println(ali.getNomComplet() + " + " + fourgon.getImmatriculation() + " : "
+                + estDisponible.executer(ali, fourgon));
 
-        // 7. Extraire immatriculation
-        TransformationVehicule<Vehicule, String> extraireImmat = v -> v.getImmatriculation();
-        System.out.println("\n=== 7. Immatriculations ===");
-        service.mapperVehicules(flotte, extraireImmat).forEach(System.out::println);
-
-        // 8. Calculer age
-        TransformationVehicule<Vehicule, Integer> calculerAge = v -> 2026 - v.getAnnee();
-        System.out.println("\n=== 8. Ages ===");
-        for (Vehicule v : flotte) {
-            System.out.println(v.getImmatriculation() + " a " + calculerAge.transformer(v) + " ans");
+        System.out.println("\n3. Verifier si un vehicule est amorti (5 ans ou plus)");
+        for (Vehicule vehicule : vehicules) {
+            if (estAmorti.executer(vehicule)) {
+                System.out.println(vehicule.getImmatriculation() + " est amorti ? true (" + vehicule.getAge() + " ans)");
+            } else {
+                System.out.println(vehicule.getImmatriculation() + " est amorti ? false (" + vehicule.getAge() + " ans)");
+            }
         }
 
-        // 9. Cout total entretien
-        TransformationVehicule<Entretien, Integer> coutTotal = e -> e.getCout() + 5000;
-        System.out.println("\n=== 9. Couts entretiens ===");
-        System.out.println(e1.getType() + " coute " + coutTotal.transformer(e1) + " FCFA");
-        System.out.println(e2.getType() + " coute " + coutTotal.transformer(e2) + " FCFA");
+        System.out.println("\n4. Verifier si un chauffeur doit partir a la retraite");
+        for (Chauffeur chauffeur : chauffeurs) {
+            System.out.println(
+                    chauffeur.getNomComplet() + " doit partir ? " + partALaRetraite.executer(chauffeur)
+                            + " (" + chauffeur.getAge() + " ans)"
+            );
+        }
 
-        // --- C. Actions ---
-        // 10. Marquer en revision
-        ActionVehicule<Vehicule> marquerRevision = v -> v.setEnRevision(true);
-        service.appliquerSurVehicules(flotte, marquerRevision);
-        System.out.println("\n=== 10. Marques en revision ===");
-        for (Vehicule v : flotte) { System.out.println(v.getImmatriculation() + " en revision : " + v.isEnRevision()); }
+        System.out.println("\n5. Transformer un chauffeur en String");
+        for (Chauffeur chauffeur : chauffeurs) {
+            String texte = transformerEnTexte.executer(chauffeur);
+            System.out.println(texte);
+        }
 
-        // 11. Augmenter km de 1000
-        ActionVehicule<Vehicule> augmenterKm = v -> v.setKilometrage(v.getKilometrage() + 1000);
-        service.appliquerSurVehicules(flotte, augmenterKm);
-        System.out.println("\n=== 11. Km augmentes ===");
-        for (Vehicule v : flotte) { System.out.println(v.getImmatriculation() + " -> " + v.getKilometrage() + " km"); }
+        System.out.println("\n6. Comparer deux chauffeurs selon l'age");
+        List<Chauffeur> chauffeursTries = new ArrayList<>(chauffeurs);
+        chauffeursTries.sort(comparerParAge);
+        for (Chauffeur chauffeur : chauffeursTries) {
+            System.out.println(chauffeur.getNomComplet() + " - " + chauffeur.getAge() + " ans");
+        }
 
-        // 12. Terminer location
-        ActionVehicule<Location> terminerLocation = loc -> loc.setDateFin(LocalDate.now());
-        terminerLocation.executer(loc1);
-        System.out.println("\n=== 12. Location terminee ===");
-        System.out.println("Location terminee le " + loc1.getDateFin());
-
-        // --- D. Comparaisons ---
-        // 13. Tri par km croissant
-        ComparaisonVehicule<Vehicule> parKm = (a, b) -> Integer.compare(a.getKilometrage(), b.getKilometrage());
-        service.trierVehicules(flotte, parKm);
-        System.out.println("\n=== 13. Tri par km ===");
-        for (Vehicule v : flotte) { System.out.println(v.getImmatriculation() + " : " + v.getKilometrage() + " km"); }
-
-        // 14. Tri par immatriculation alphabetique
-        ComparaisonVehicule<Vehicule> parImmat = (a, b) -> a.getImmatriculation().compareTo(b.getImmatriculation());
-        service.trierVehicules(flotte, parImmat);
-        System.out.println("\n=== 14. Tri par plaque ===");
-        for (Vehicule v : flotte) { System.out.println(v.getImmatriculation()); }
+        System.out.println("\n7. Comparer deux vehicules selon le type");
+        List<Vehicule> vehiculesTries = new ArrayList<>(vehicules);
+        vehiculesTries.sort(comparerParType);
+        for (Vehicule vehicule : vehiculesTries) {
+            System.out.println(vehicule);
+        }
     }
 }
